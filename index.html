@@ -7,7 +7,7 @@
         <title>Document</title>
         <style>
             @font-face {
-                font-family: 'YS Text';
+                font-family: 'YS Text Optional';
                 src: url('https://yastatic.net/s3/home/fonts/ys/3/text-variable-full.woff2')
                     format('woff2-variations');
                 /* stylelint-disable-next-line font-weight-notation */
@@ -15,13 +15,43 @@
                 font-display: optional;
             }
 
-            * {
-                font-family: 'YS Text';
+            @font-face {
+                font-family: 'YS Text Swap';
+                src: url('https://yastatic.net/s3/home/fonts/ys/3/text-variable-full.woff2')
+                    format('woff2-variations');
+                /* stylelint-disable-next-line font-weight-notation */
+                font-weight: 400 700;
+                font-display: swap;
+            }
+
+            @font-face {
+                font-family: 'YS Text Default';
+                src: url('https://yastatic.net/s3/home/fonts/ys/3/text-variable-full.woff2')
+                    format('woff2-variations');
+                /* stylelint-disable-next-line font-weight-notation */
+                font-weight: 400 700;
+                font-display: default;
+            }
+
+            .optional {
+                font-family: 'YS Text Optional';
+                font-size: 64px;
+            }
+
+            .swap {
+                font-family: 'YS Text Swap';
+                font-size: 64px;
+            }
+
+            .default {
+                font-family: 'YS Text Default';
                 font-size: 64px;
             }
         </style>
     </head>
     <body>
-        YS Text Сосиски из Сасово
+        <div class="optional">YS Text Optional Сосиски из Сасово</div>
+        <div class="swap">YS Text Swap Сосиски из Сасово</div>
+        <div class="default">YS Text Default Сосиски из Сасово</div>
     </body>
 </html>
