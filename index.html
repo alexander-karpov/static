@@ -15,15 +15,19 @@
     <pre id="outgoing"></pre>
     <script src="simplepeer.min.js"></script>
     <script>
+        function show(...args) {
+            alert(args.join('\n\n'));
+        }
+
         const p = new SimplePeer({
             initiator: location.hash === '#1',
             trickle: false
         })
 
-        p.on('error', err => console.log('error', err, err.code))
+        p.on('error', err => show('error', err, err.code))
 
         p.on('signal', data => {
-            console.log('SIGNAL', JSON.stringify(data))
+            show('SIGNAL', JSON.stringify(data))
             document.querySelector('#outgoing').textContent = JSON.stringify(data)
         })
 
@@ -33,12 +37,12 @@
         })
 
         p.on('connect', () => {
-            console.log('CONNECT')
+            show('CONNECT')
             p.send('whatever' + Math.random())
         })
 
         p.on('data', data => {
-            console.log('data: ' + data)
+            show('data: ' + data)
         })
     </script>
 </body>
