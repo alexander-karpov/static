@@ -14,20 +14,33 @@
     </form>
     <pre id="outgoing"></pre>
     <script src="simplepeer.min.js"></script>
+
+    <div class="status">of</div>
+    <textarea id="message"></textarea>
+
     <script>
         function show(...args) {
             alert(args.join('\n\n'));
         }
 
+        function setStatus(st) {
+            document.querySelector('.status').textContent = st;
+        }
+
+        const initiator = location.hash === '#1';
+
         const p = new SimplePeer({
-            initiator: location.hash === '#1',
+            initiator,
             trickle: false
         })
 
-        p.on('error', err => show('error', err, err.code))
+        p.on('error', err => {
+            setStatus('error');
+            console.log('error', err, err.code);
+        }
+        )
 
         p.on('signal', data => {
-            show('SIGNAL', JSON.stringify(data))
             document.querySelector('#outgoing').textContent = JSON.stringify(data)
         })
 
@@ -37,13 +50,29 @@
         })
 
         p.on('connect', () => {
-            show('CONNECT')
+            setStatus('connect')
             p.send('whatever' + Math.random())
         })
 
         p.on('data', data => {
-            show('data: ' + data)
+            if (initiator) {
+                console.timeEnd(data);
+            }
+
+            document.querySelector('#message').value = data;
+
+            if (!initiator) {
+                p.send(data);
+            }
         })
+
+        if (initiator) {
+            document.querySelector('#message').addEventListener('input', (e) => {
+                console.time(e.target.value);
+                p.send(e.target.value);
+            })
+        }
+
     </script>
 </body>
 
