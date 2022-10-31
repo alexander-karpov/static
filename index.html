@@ -1,44 +1,46 @@
-<!DOCTYPE html>
-<html lang="en-us">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | Gum</title>
-  </head>
-  <body style="text-align: center">
-    <canvas id="unity-canvas" width=960 height=600 style="width: 960px; height: 600px; background: #231F20"></canvas>
+<html>
 
-    <script src="https://yandex.ru/games/sdk/v2"></script>
+<body>
+    <style>
+        #outgoing {
+            width: 600px;
+            word-wrap: break-word;
+            white-space: normal;
+        }
+    </style>
+    <form>
+        <textarea id="incoming"></textarea>
+        <button type="submit">submit</button>
+    </form>
+    <pre id="outgoing"></pre>
+    <script src="simplepeer.min.js"></script>
     <script>
-        YaGames.init({
-            screen: { orientation: 'landscape', lock: true }
-        }).then((ysdk) => {
-            console.log('Yandex SDK initialized');
-            window.ysdk = ysdk;
-        });
-    </script>
-    
-    <script src="Build/WebGLBuild.loader.js"></script>
-    <script>
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-      }
+        const p = new SimplePeer({
+            initiator: location.hash === '#1',
+            trickle: false
+        })
 
-      createUnityInstance(document.querySelector("#unity-canvas"), {
-        dataUrl: "Build/WebGLBuild.data",
-        frameworkUrl: "Build/WebGLBuild.framework.js",
-        codeUrl: "Build/WebGLBuild.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "AlexanderKarpov",
-        productName: "Gum",
-        productVersion: "0.1.0",
-        // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
-        // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
-      });
+        p.on('error', err => console.log('error', err, err.code))
+
+        p.on('signal', data => {
+            console.log('SIGNAL', JSON.stringify(data))
+            document.querySelector('#outgoing').textContent = JSON.stringify(data)
+        })
+
+        document.querySelector('form').addEventListener('submit', ev => {
+            ev.preventDefault()
+            p.signal(JSON.parse(document.querySelector('#incoming').value))
+        })
+
+        p.on('connect', () => {
+            console.log('CONNECT')
+            p.send('whatever' + Math.random())
+        })
+
+        p.on('data', data => {
+            console.log('data: ' + data)
+        })
     </script>
-  </body>
+</body>
+
 </html>
