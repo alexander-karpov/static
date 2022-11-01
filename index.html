@@ -1,79 +1,120 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="simplepeer.min.js"></script>
+</head>
 
 <body>
-    <style>
-        #outgoing {
-            width: 600px;
-            word-wrap: break-word;
-            white-space: normal;
-        }
-    </style>
-    <form>
-        <textarea id="incoming"></textarea>
-        <button type="submit">submit</button>
-    </form>
-    <pre id="outgoing"></pre>
-    <script src="simplepeer.min.js"></script>
-
-    <div class="status">of</div>
-    <textarea id="message"></textarea>
-
     <script>
-        function show(...args) {
-            alert(args.join('\n\n'));
-        }
-
-        function setStatus(st) {
-            document.querySelector('.status').textContent = st;
-        }
-
-        const initiator = location.hash === '#1';
-
-        const p = new SimplePeer({
-            initiator,
+        const config = {
+            channelConfig: { ordered: false },
+            config: {
+                iceServers: [
+                    {
+                        urls: "stun:openrelay.metered.ca:80",
+                    },
+                    {
+                        urls: "turn:openrelay.metered.ca:80",
+                        username: "openrelayproject",
+                        credential: "openrelayproject",
+                    },
+                    {
+                        urls: "turn:openrelay.metered.ca:443",
+                        username: "openrelayproject",
+                        credential: "openrelayproject",
+                    },
+                    {
+                        urls: "turn:openrelay.metered.ca:443?transport=tcp",
+                        username: "openrelayproject",
+                        credential: "openrelayproject",
+                    },
+                ]
+            },
             trickle: false
-        })
+        };
 
-        p.on('error', err => {
-            setStatus('error');
-            console.log('error', err, err.code);
-        }
-        )
+        const socket = new WebSocket('wss://ee4a-2a02-6bf-fff0-500-4423-2006-4d7c-9a14.eu.ngrok.io');
+        let p;
 
-        p.on('signal', data => {
-            document.querySelector('#outgoing').textContent = JSON.stringify(data)
-        })
+        socket.onmessage = (({ data }) => {
+            const action = JSON.parse(data.toString('utf8'));
 
-        document.querySelector('form').addEventListener('submit', ev => {
-            ev.preventDefault()
-            p.signal(JSON.parse(document.querySelector('#incoming').value))
-        })
+            console.log('message', action);
 
-        p.on('connect', () => {
-            setStatus('connect')
-            p.send('whatever' + Math.random())
-        })
+            if (action.type === 'start') {
+                p = new SimplePeer({
+                    initiator: true,
+                    ...config
+                });
 
-        p.on('data', data => {
-            if (initiator) {
-                console.timeEnd(data);
+                p.on('signal', data => {
+                    socket.send(JSON.stringify({
+                        type: 'offer',
+                        signal: data
+                    }));
+                });
+
+                p.on('error', err => {
+                    console.error(err.code);
+                    throw err;
+                });
+
+                p.on('connect', () => {
+                    // wait for 'connect' event before using the data channel
+                    alert('Connected');
+                    socket.close(0);
+                });
+
+                return;
             }
 
-            document.querySelector('#message').value = data;
+            if (action.type === 'offer') {
+                p = new SimplePeer({
+                    initiator: false,
+                    ...config
+                });
 
-            if (!initiator) {
-                p.send(data);
+                if (!action.signal) {
+                    throw new Error('В сообщении offer не передан сигнал');
+                }
+
+                p.signal(action.signal);
+
+                p.on('signal', data => {
+                    socket.send(JSON.stringify({
+                        type: 'answer',
+                        signal: data
+                    }));
+                });
+
+                p.on('connect', () => {
+                    // wait for 'connect' event before using the data channel
+                    alert('Connected');
+                    socket.close(0);
+                })
+
+                p.on('error', err => {
+                    console.error(err.code);
+                    throw err;
+                });
+
+                return;
             }
-        })
 
-        if (initiator) {
-            document.querySelector('#message').addEventListener('input', (e) => {
-                console.time(e.target.value);
-                p.send(e.target.value);
-            })
-        }
+            if (action.type === 'answer') {
+                p.signal(action.signal);
+                return;
+            }
 
+            throw new Error('Socket action type is unknown');
+        });
     </script>
+
 </body>
 
 </html>
