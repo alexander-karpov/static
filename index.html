@@ -1,15 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script src="simplepeer.min.js"></script>
-</head>
+<html>
 
 <body>
+    <style>
+        #outgoing {
+            width: 600px;
+            word-wrap: break-word;
+            white-space: normal;
+        }
+    </style>
+    <form>
+        <textarea id="incoming"></textarea>
+        <button type="submit">submit</button>
+    </form>
+    <pre id="outgoing"></pre>
+    <script src="simplepeer.min.js"></script>
     <script>
         const config = {
             channelConfig: { ordered: false },
@@ -38,83 +42,34 @@
             trickle: false
         };
 
-        const socket = new WebSocket('wss://ee4a-2a02-6bf-fff0-500-4423-2006-4d7c-9a14.eu.ngrok.io');
         let p;
 
-        socket.onmessage = (({ data }) => {
-            const action = JSON.parse(data.toString('utf8'));
+        p = new SimplePeer({
+            initiator: location.hash === '#1',
+            ...config
+        })
 
-            console.log('message', action);
+        p.on('error', err => console.log('error', err))
 
-            if (action.type === 'start') {
-                p = new SimplePeer({
-                    initiator: true,
-                    ...config
-                });
+        p.on('signal', data => {
+            console.log('SIGNAL', JSON.stringify(data))
+            document.querySelector('#outgoing').textContent = JSON.stringify(data)
+        })
 
-                p.on('signal', data => {
-                    socket.send(JSON.stringify({
-                        type: 'offer',
-                        signal: data
-                    }));
-                });
+        document.querySelector('form').addEventListener('submit', ev => {
+            ev.preventDefault()
+            p.signal(JSON.parse(document.querySelector('#incoming').value))
+        })
 
-                p.on('error', err => {
-                    console.error(err.code);
-                    throw err;
-                });
+        p.on('connect', () => {
+            console.log('CONNECT')
+            p.send('whatever' + Math.random())
+        })
 
-                p.on('connect', () => {
-                    // wait for 'connect' event before using the data channel
-                    alert('Connected');
-                    socket.close(0);
-                });
-
-                return;
-            }
-
-            if (action.type === 'offer') {
-                p = new SimplePeer({
-                    initiator: false,
-                    ...config
-                });
-
-                if (!action.signal) {
-                    throw new Error('В сообщении offer не передан сигнал');
-                }
-
-                p.signal(action.signal);
-
-                p.on('signal', data => {
-                    socket.send(JSON.stringify({
-                        type: 'answer',
-                        signal: data
-                    }));
-                });
-
-                p.on('connect', () => {
-                    // wait for 'connect' event before using the data channel
-                    alert('Connected');
-                    socket.close(0);
-                })
-
-                p.on('error', err => {
-                    console.error(err.code);
-                    throw err;
-                });
-
-                return;
-            }
-
-            if (action.type === 'answer') {
-                p.signal(action.signal);
-                return;
-            }
-
-            throw new Error('Socket action type is unknown');
-        });
+        p.on('data', data => {
+            console.log('data: ' + data)
+        })
     </script>
-
 </body>
 
 </html>
