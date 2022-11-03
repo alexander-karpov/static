@@ -10,12 +10,13 @@
     </style>
     <form>
         <textarea id="incoming"></textarea>
+        <div id="trip"></div>
     </form>
     <pre id="outgoing"></pre>
     <script src="simplepeer.min.js"></script>
     <script>
         const config = {
-            channelConfig: {},
+            channelConfig: { ordered: false, maxRetransmits: 0 },
             config: {
                 iceServers: [
                     {
@@ -139,6 +140,8 @@
 
 
         const ta = document.getElementById('incoming');
+        const trip = document.getElementById('trip');
+        const tm = new Map();
 
         realtime.receive(data => {
             const t = data.toString('utf8');
@@ -149,12 +152,14 @@
                 realtime.send(t);
             } else {
                 console.timeEnd(t);
+                trip.textContent = tm.get(t).getTime() - new Date().getTime();
             }
         });
 
         ta.addEventListener('input', function (e) {
             const t = e.target.value;
             console.time(t);
+            tm.set(t, new Date())
             realtime.send(e.target.value);
         });
     </script>
