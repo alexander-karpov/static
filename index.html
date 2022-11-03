@@ -24,11 +24,11 @@
                     {
                         urls: "stun:51.250.76.61:3478",
                     },
-                    // {
-                    //     urls: "turn:openrelay.metered.ca:80",
-                    //     username: "openrelayproject",
-                    //     credential: "openrelayproject",
-                    // },
+                    {
+                        urls: "turn:51.250.76.61:3478",
+                        username: "turnuser",
+                        credential: "turn456",
+                    },
                     // {
                     //     urls: "turn:openrelay.metered.ca:443",
                     //     username: "openrelayproject",
@@ -151,6 +151,7 @@
 
             if (t !== ta.value) {
                 realtime.send(t);
+                trip.textContent = t;
             } else {
                 console.timeEnd(t);
                 trip.textContent = tm.get(t).getTime() - new Date().getTime();
