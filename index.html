@@ -15,7 +15,7 @@
     <script src="simplepeer.min.js"></script>
     <script>
         const config = {
-            channelConfig: { ordered: false },
+            channelConfig: {},
             config: {
                 iceServers: [
                     {
@@ -98,11 +98,21 @@
                     // wait for 'connect' event before using the data channel
                     alert('connected');
                     this.connectResolve();
+
+                    console.assert(this.peer._channel.ordered === false);
+                    console.assert(this.peer._channel.binaryType === 'arraybuffer');
+                    console.assert(this.peer._channel.maxRetransmits === 0);
                 })
 
                 this.peer.on('error', err => {
                     console.log('peer onerror')
-                    this.connectReject(err);
+
+                    if (this.connectReject) {
+                        this.connectReject(err);
+                    } else {
+                        throw err;
+                    }
+
                 });
 
                 this.peer.on('data', data => {
@@ -130,9 +140,21 @@
 
         const ta = document.getElementById('incoming');
 
-        realtime.receive(data => ta.value = data.toString('utf8'));
+        realtime.receive(data => {
+            const t = data.toString('utf8');
+            // console.timeEnd(t);
+            // ta.value = t
+
+            if (t !== ta.value) {
+                realtime.send(t);
+            } else {
+                console.timeEnd(t);
+            }
+        });
 
         ta.addEventListener('input', function (e) {
+            const t = e.target.value;
+            console.time(t);
             realtime.send(e.target.value);
         });
     </script>
