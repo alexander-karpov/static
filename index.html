@@ -1,170 +1,155 @@
-<html>
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Самурайская дуэль</title>
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+  <link rel="stylesheet" href="TemplateData/style.css">
+</head>
 
 <body>
-    <style>
-        #outgoing {
-            width: 600px;
-            word-wrap: break-word;
-            white-space: normal;
-        }
-    </style>
-    <form>
-        <textarea id="incoming"></textarea>
-        <div id="trip"></div>
-    </form>
-    <pre id="outgoing"></pre>
-    <script src="simplepeer.min.js"></script>
-    <script>
-        const trip = document.getElementById('trip');
+  <div id="unity-container" class="unity-desktop">
+    <canvas id="unity-canvas" width=960 height=600></canvas>
+    <div id="unity-loading-bar">
+      <div id="unity-logo"></div>
+      <div id="unity-progress-bar-empty">
+        <div id="unity-progress-bar-full"></div>
+      </div>
+    </div>
+    <div id="unity-warning"> </div>
+    <div id="unity-footer">
+      <div id="unity-webgl-logo"></div>
+      <div id="unity-fullscreen-button"></div>
+      <div id="unity-build-title">Самурайская дуэль</div>
+    </div>
+  </div>
+  <script>
+    var container = document.querySelector("#unity-container");
+    var canvas = document.querySelector("#unity-canvas");
+    var loadingBar = document.querySelector("#unity-loading-bar");
+    var progressBarFull = document.querySelector("#unity-progress-bar-full");
+    var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+    var warningBanner = document.querySelector("#unity-warning");
 
-        const config = {
-            channelConfig: { ordered: false, maxRetransmits: 0 },
-            config: {
-                iceServers: [
-                    {
-                        urls: "stun:51.250.76.61:3478",
-                    },
-                    {
-                        urls: "turn:51.250.76.61:3478",
-                        username: "turnuser",
-                        credential: "turn456",
-                    },
-                    // {
-                    //     urls: "turn:openrelay.metered.ca:443",
-                    //     username: "openrelayproject",
-                    //     credential: "openrelayproject",
-                    // },
-                    // {
-                    //     urls: "turn:openrelay.metered.ca:443?transport=tcp",
-                    //     username: "openrelayproject",
-                    //     credential: "openrelayproject",
-                    // },
-                ]
-            },
-            trickle: false
+    // Shows a temporary message banner/ribbon for a few seconds, or
+    // a permanent error message on top of the canvas if type=='error'.
+    // If type=='warning', a yellow highlight color is used.
+    // Modify or remove this function to customize the visually presented
+    // way that non-critical warnings and error messages are presented to the
+    // user.
+    function unityShowBanner(msg, type) {
+      function updateBannerVisibility() {
+        warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+      }
+      var div = document.createElement('div');
+      div.innerHTML = msg;
+      warningBanner.appendChild(div);
+      if (type == 'error') div.style = 'background: red; padding: 10px;';
+      else {
+        if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+        setTimeout(function () {
+          warningBanner.removeChild(div);
+          updateBannerVisibility();
+        }, 5000);
+      }
+      updateBannerVisibility();
+    }
+
+    var buildUrl = "Build";
+    var loaderUrl = buildUrl + "/Build.loader.js";
+    var config = {
+      dataUrl: buildUrl + "/Build.data.br",
+      frameworkUrl: buildUrl + "/Build.framework.js.br",
+      codeUrl: buildUrl + "/Build.wasm.br",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "DefaultCompany",
+      productName: "Hello",
+      productVersion: "World",
+      showBanner: unityShowBanner,
+    };
+
+    // By default Unity keeps WebGL canvas render target size matched with
+    // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+    // Set this to false if you want to decouple this synchronization from
+    // happening inside the engine, and you would instead like to size up
+    // the canvas DOM size and WebGL render target sizes yourself.
+    // config.matchWebGLToCanvasSize = false;
+
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      // Mobile device style: fill the whole browser client area with the game canvas:
+
+      var meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+      container.className = "unity-mobile";
+      canvas.className = "unity-mobile";
+
+      // To lower canvas resolution on mobile devices to gain some
+      // performance, uncomment the following line:
+      // config.devicePixelRatio = 1;
+    } else {
+      // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
+
+      canvas.style.width = "960px";
+      canvas.style.height = "600px";
+    }
+
+    loadingBar.style.display = "block";
+
+    var script = document.createElement("script");
+    script.src = loaderUrl;
+    script.onload = () => {
+      createUnityInstance(canvas, config, (progress) => {
+        progressBarFull.style.width = 100 * progress + "%";
+      }).then((unityInstance) => {
+        loadingBar.style.display = "none";
+        fullscreenButton.onclick = () => {
+          unityInstance.SetFullscreen(1);
         };
+      }).catch((message) => {
+        alert(message);
+      });
+    };
+    document.body.appendChild(script);
+  </script>
+  <script src="https://yoide.su/realtime.js"></script>
+  <script>
+
+    window.testFn = function (HEAPF32, array, size) {
+
+      if (!window.realtime) {
+        window.realtime = new window.Realtime();
+        window.realtime.connect();
+      }
+
+      const data = new Float32Array(size);
+
+      for (var i = 0; i < size; i++)
+        data[i] = HEAPF32[(array >> 2) + i];
 
 
-        class RealtimeX {
-            constructor() {
-                this.peer = null;
-                this.ws = null;
-                this.connectResolve = null;
-                this.connectReject = null;
-                this.receiveHandler = null;
-            }
+      console.log('туда data', data.length, data);
 
-            connect() {
-                this.ws = new WebSocket('wss://yoide.su:3001');
+      window.realtime.send(data);
 
-                this.ws.onmessage = (event) => {
-                    const action = JSON.parse(event.data.toString('utf8'));
+      const received = window.realtime.read();
 
-                    console.log('ws.onmessage:', action)
+      if (received) {
+        receivedData = new Float32Array(window.realtime.read().buffer);
 
-                    switch (action.type) {
-                        case 'start':
-                            this.createPeer(true);
-                            break;
-                        case 'signal':
-                            if (!this.peer) {
-                                this.createPeer(false);
-                            }
+        console.log('обратно data', receivedData.length, receivedData);
 
-                            this.peer.signal(action.signal);
-                            break;
-                        default:
-                            this.connectReject(new Error(`Enexpected action type ${action.type}`));
+        for (var i = 0; i < size; i++)
+          HEAPF32[(array >> 2) + i] = receivedData[i];
+      }
 
-                    }
-                };
+      return true;
 
-                return new Promise((resolve, reject) => {
-                    this.connectResolve = resolve;
-                    this.connectReject = reject;
-                });
-            }
-
-
-            createPeer(initiator) {
-                this.peer = new SimplePeer({
-                    initiator,
-                    ...config
-                });
-
-                this.peer.on('signal', signal => {
-                    console.log('peer onsignal')
-                    this.ws.send(JSON.stringify({ type: 'signal', signal }))
-                })
-
-                this.peer.on('connect', () => {
-                    // wait for 'connect' event before using the data channel
-                    trip.textContent = "CONNECTED";
-                    this.connectResolve();
-
-                    console.assert(this.peer._channel.ordered === false);
-                    console.assert(this.peer._channel.binaryType === 'arraybuffer');
-                    console.assert(this.peer._channel.maxRetransmits === 0);
-                })
-
-                this.peer.on('error', err => {
-                    console.log('peer onerror')
-
-                    if (this.connectReject) {
-                        this.connectReject(err);
-                    } else {
-                        throw err;
-                    }
-
-                });
-
-                this.peer.on('data', data => {
-                    if (this.receiveHandler) {
-                        this.receiveHandler(data);
-                    }
-                });
-            }
-
-            send(data) {
-                this.peer.send(data);
-            }
-
-            receive(handler) {
-                this.receiveHandler = handler;
-            }
-        }
-
-        const realtime = new RealtimeX();
-
-
-        realtime.connect();
-
-
-
-        const ta = document.getElementById('incoming');
-        const tm = new Map();
-
-        realtime.receive(data => {
-            const t = data.toString('utf8');
-            // console.timeEnd(t);
-            // ta.value = t
-
-            if (t !== ta.value) {
-                realtime.send(t);
-                trip.textContent = t;
-            } else {
-                console.timeEnd(t);
-                trip.textContent = tm.get(t).getTime() - new Date().getTime();
-            }
-        });
-
-        ta.addEventListener('input', function (e) {
-            const t = e.target.value;
-            console.time(t);
-            tm.set(t, new Date())
-            realtime.send(e.target.value);
-        });
-    </script>
+    }
+  </script>
 </body>
 
 </html>
