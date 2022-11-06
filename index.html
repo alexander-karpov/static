@@ -65,8 +65,8 @@
       codeUrl: buildUrl + "/Build.wasm",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
-      productName: "Hello",
-      productVersion: "World",
+      productName: "Самурайская дуэль",
+      productVersion: "1.0",
       showBanner: unityShowBanner,
     };
 
@@ -116,6 +116,53 @@
     document.body.appendChild(script);
   </script>
   <script src="https://yoide.su/realtime.js"></script>
+  <script>
+    window.debugTransmitRealtimeData = (HEAPF32, array, size) => {
+
+
+      if (!this.realtime) {
+        this.realtime = new window.Realtime();
+        this.realtime.connect();
+
+        this.lastSentVersion = 0;
+      }
+
+      var sendVersion = HEAPF32[(array >> 2)];
+
+      if (sendVersion > this.lastSentVersion) {
+        var sendData = new Float32Array(size / 2);
+
+        console.log('copiins');
+        for (var i = 0; i < size / 2; i++) {
+          sendData[i] = HEAPF32[(array >> 2) + i];
+          console.log('i ', i, 'HEAPF32[(array >> 2) + i] ', HEAPF32[(array >> 2) + i], 'sendData[i]', sendData[i]);
+        }
+
+        this.realtime.send(sendData);
+        this.lastSentVersion = sendVersion;
+        console.log('send player data', sendData);
+      }
+
+      var received = this.realtime.read();
+
+      if (received) {
+        const receivedFloat = new Float32Array(this.realtime.read().buffer);
+        var receiveOffset = size / 2;
+
+        for (var i = 0; i < 5; i++)
+          HEAPF32[(array >> 2) + i + 5] = receivedFloat[i];
+
+        console.log("received ", receivedFloat);
+      }
+
+      const all = [];
+      for (var i = 0; i < size; i++)
+        all.push(HEAPF32[(array >> 2) + i]);
+
+      console.log('all', all);
+      return true;
+    }
+  </script>
 </body>
 
 </html>
