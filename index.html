@@ -60,9 +60,9 @@
     var buildUrl = "Build";
     var loaderUrl = buildUrl + "/Build.loader.js";
     var config = {
-      dataUrl: buildUrl + "/Build.data.br",
-      frameworkUrl: buildUrl + "/Build.framework.js.br",
-      codeUrl: buildUrl + "/Build.wasm.br",
+      dataUrl: buildUrl + "/Build.data",
+      frameworkUrl: buildUrl + "/Build.framework.js",
+      codeUrl: buildUrl + "/Build.wasm",
       streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
       productName: "Hello",
@@ -116,40 +116,6 @@
     document.body.appendChild(script);
   </script>
   <script src="https://yoide.su/realtime.js"></script>
-  <script>
-
-    window.testFn = function (HEAPF32, array, size) {
-
-      if (!window.realtime) {
-        window.realtime = new window.Realtime();
-        window.realtime.connect();
-      }
-
-      const data = new Float32Array(size);
-
-      for (var i = 0; i < size; i++)
-        data[i] = HEAPF32[(array >> 2) + i];
-
-
-      console.log('туда data', data.length, data);
-
-      window.realtime.send(data);
-
-      const received = window.realtime.read();
-
-      if (received) {
-        receivedData = new Float32Array(window.realtime.read().buffer);
-
-        console.log('обратно data', receivedData.length, receivedData);
-
-        for (var i = 0; i < size; i++)
-          HEAPF32[(array >> 2) + i] = receivedData[i];
-      }
-
-      return true;
-
-    }
-  </script>
 </body>
 
 </html>
