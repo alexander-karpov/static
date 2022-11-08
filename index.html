@@ -119,47 +119,33 @@
   <script>
     window.debugTransmitRealtimeData = (HEAPF32, array, size) => {
 
+      var start = array >> 2;
 
       if (!this.realtime) {
         this.realtime = new window.Realtime();
         this.realtime.connect();
 
-        this.lastSentVersion = 0;
+        this.sendData = new Float32Array(size);
       }
 
-      var sendVersion = HEAPF32[(array >> 2)];
-
-      if (sendVersion > this.lastSentVersion) {
-        var sendData = new Float32Array(size / 2);
-
-        console.log('copiins');
-        for (var i = 0; i < size / 2; i++) {
-          sendData[i] = HEAPF32[(array >> 2) + i];
-          console.log('i ', i, 'HEAPF32[(array >> 2) + i] ', HEAPF32[(array >> 2) + i], 'sendData[i]', sendData[i]);
+      if (HEAPF32[start] > this.sendData[0]) {
+        for (var i = 0; i < size; i++) {
+          this.sendData[i] = HEAPF32[start + i];
         }
 
-        this.realtime.send(sendData);
-        this.lastSentVersion = sendVersion;
-        console.log('send player data', sendData);
+        this.realtime.send(this.sendData);
+
+        console.log("send player data")
       }
 
       var received = this.realtime.read();
 
       if (received) {
         const receivedFloat = new Float32Array(this.realtime.read().buffer);
-        var receiveOffset = size / 2;
 
-        for (var i = 0; i < 5; i++)
-          HEAPF32[(array >> 2) + i + 5] = receivedFloat[i];
-
-        console.log("received ", receivedFloat);
+        for (var i = 0; i < size; i++)
+          HEAPF32[start + size + i] = receivedFloat[i];
       }
-
-      const all = [];
-      for (var i = 0; i < size; i++)
-        all.push(HEAPF32[(array >> 2) + i]);
-
-      console.log('all', all);
       return true;
     }
   </script>
