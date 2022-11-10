@@ -17,7 +17,22 @@
         }
 
         * {
-            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Roboto, 'Segoe UI', Arial, Helvetica, 'Arial Unicode MS', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Roboto, 'Segoe UI', Arial, Helvetica, sans-serif;
+
+            line-height: 21px;
+            font-size: 16px;
+        }
+
+        a {
+            color: #006000;
+            font-size: 18px;
+            line-height: 22px;
+        }
+
+        h2 {
+            color: navy;
+            font-size: 21px;
+            line-height: 24px;
         }
 
         body.ys * {
@@ -151,7 +166,21 @@
         const message = document.querySelector('#message');
         const texts = [];
 
-        const words = textContainer.textContent.split(' ');
+        const words = textContainer
+            .textContent
+            .split(' ')
+            .map((word, index) => {
+                switch (index % 25) {
+                    case 0:
+                        return `<b>${word}</b>`;
+                    case 1:
+                        return `<h2>${word}</h2>`;
+                    case 2:
+                        return `<a href="#">${word}</a>`;
+                    default:
+                        return word;
+                }
+            });
 
         for (let i = 0; i < 1000; i++) {
             texts.push(_.shuffle(words).join(' '));
@@ -161,7 +190,7 @@
             const startTime = performance.now();
 
             for (const text of texts) {
-                textContainer.textContent = text;
+                textContainer.innerHTML = text;
                 message.textContent = `height ${textContainer.clientHeight}`;
             }
 
