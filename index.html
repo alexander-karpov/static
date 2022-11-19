@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <title>Самурайская дуэль</title>
+  <title>Samurai</title>
   <link rel="shortcut icon" href="TemplateData/favicon.ico">
   <link rel="stylesheet" href="TemplateData/style.css">
 </head>
@@ -22,7 +22,7 @@
     <div id="unity-footer">
       <div id="unity-webgl-logo"></div>
       <div id="unity-fullscreen-button"></div>
-      <div id="unity-build-title">Самурайская дуэль</div>
+      <div id="unity-build-title">Samurai</div>
     </div>
   </div>
   <script>
@@ -62,13 +62,13 @@
     var config = {
       dataUrl: buildUrl + "/Build.data",
       frameworkUrl: buildUrl + "/Build.framework.js",
-      codeUrl: buildUrl + "/Build.wasm",
-      streamingAssetsUrl: "StreamingAssets",
+        codeUrl: buildUrl + "/Build.wasm",
+        streamingAssetsUrl: "StreamingAssets",
       companyName: "DefaultCompany",
-      productName: "Самурайская дуэль",
-      productVersion: "1.0",
-      showBanner: unityShowBanner,
-    };
+    productName: "Samurai",
+    productVersion: "1.0",
+    showBanner: unityShowBanner,
+      };
 
     // By default Unity keeps WebGL canvas render target size matched with
     // the DOM size of the canvas element (scaled by window.devicePixelRatio)
@@ -115,40 +115,8 @@
     };
     document.body.appendChild(script);
   </script>
-  <script src="https://yoide.su/realtime.js"></script>
-  <script>
-    window.debugTransmitRealtimeData = (HEAPF32, array, size) => {
-
-      var start = array >> 2;
-
-      if (!this.realtime) {
-        this.realtime = new window.Realtime();
-        this.realtime.connect();
-
-        this.sendData = new Float32Array(size);
-      }
-
-      if (HEAPF32[start] > this.sendData[0]) {
-        for (var i = 0; i < size; i++) {
-          this.sendData[i] = HEAPF32[start + i];
-        }
-
-        this.realtime.send(this.sendData);
-
-        console.log("send player data")
-      }
-
-      var received = this.realtime.read();
-
-      if (received) {
-        const receivedFloat = new Float32Array(this.realtime.read().buffer);
-
-        for (var i = 0; i < size; i++)
-          HEAPF32[start + size + i] = receivedFloat[i];
-      }
-      return true;
-    }
-  </script>
+  <script src="https://storage.yandexcloud.net/kukuruku-games/textroom.js"></script>
+  <script src="TemplateData/textroom.js"></script>
 </body>
 
 </html>
