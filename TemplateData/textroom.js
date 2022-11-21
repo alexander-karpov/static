@@ -18,8 +18,8 @@ window.TextroomClient = class TextroomClient {
         });
 
         this.connectedThen = this.textroom.connect([
-            'ws://51.250.64.16:8188/',
-            'http://51.250.64.16:8088/janus'
+                'wss://yoide.su/janus-ws',
+                'https://yoide.su/janus'
         ]);
     }
 
